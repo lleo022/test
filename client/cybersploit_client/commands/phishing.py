@@ -3,13 +3,15 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-def go_phish(target: str):
+def go_phish(lines: str):
+    lines = lines.split(" ")
+
     smtp_server, port = ("e1-mail.acmcyber.com", 32525)
     username, password = ("expert-hacker", "hunter2")
 
     message = MIMEMultipart("alternative")
     message["From"] = "germs-pt2@e1-mail.acmcyber.com"
-    message["To"] = target
+    message["To"] = lines[0] if lines[0] else "e1-instructors@e1-mail.acmcyber.com"
     message["Subject"] = "" 
 
     html = """\
@@ -63,7 +65,6 @@ def go_phish(target: str):
         server.sendmail(message["From"], message["To"], message.as_string())
 
     print("Email sent!")
-
 
 
 class SendPhishing(Command):
