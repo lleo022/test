@@ -4,7 +4,8 @@ from abc import ABC
 __all__ = [
     "exit",
     "send_data",
-    "brick"
+    "brick",
+    "port_scan"
 ]
 
 
