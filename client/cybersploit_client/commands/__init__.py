@@ -5,7 +5,8 @@ __all__ = [
     "exit",
     "send_data",
     "brick",
-    "port_scan"
+    "port_scan",
+    "phishing"
 ]
 
 
