@@ -1,11 +1,5 @@
 from ..commands import Command # Required
 import socket
-
-class port_scan(Command): # Call the class anything you'd like
-    """
-    Scanning to find open ports
-    """
-
 def scan_ip(target: str, port_range: tuple[int, int]) -> list[int]:
 
     # Create a list to store open ports
@@ -19,7 +13,7 @@ def scan_ip(target: str, port_range: tuple[int, int]) -> list[int]:
 
     for i in range(port_range[0], port_range[1] + 1):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        results = s.connect_ex(("127.0.0.1", i))
+        results = s.connect_ex((target, i))
 
         if (results == 0):
             port_list.append(i)
@@ -59,16 +53,31 @@ def pretty_print_scan(open_ports: list[int]) -> None:
     # This will allow the python file to run even if you haven't put any code in this function yet
     pass
 
+class port_scan(Command): # Call the class anything you'd like
+    """
+    Scanning to find open ports
+    """
 
-# Example call to the functions
-# You do not need to edit anything in here
+    def do_command(self, lines: str):
+        lines = lines.split(" ")
+        port1 = int(lines[1])
+        port2 = int(lines[2])
+        port_range = (port1, port2)
+        open_ports = scan_ip(lines[0], port_range)
+        pretty_print_scan(open_ports)
+
 if __name__ == "__main__":
-    target_ip = "127.0.0.1"
-    ports = (20, 1000)
-    open_ports = scan_ip(target_ip, ports)
-    print(f"Open ports on {target_ip}: {', '.join(map(str, open_ports))}")
-    print()
+    import sys
+
+    target = sys.argv[1]
+    port1 = int(sys.argv[2])
+    port2 = int(sys.argv[3])
+
+    port_range = (port1, port2)
+
+    open_ports = scan_ip(target, port_range)
     pretty_print_scan(open_ports)
-    # You should (probably) see ports 22, 111, and 631 open, though exact open ports may vary.
-    # Feel free to test against the autograder as many times as you'd like!
-command = port_scan # Assign the class you created to the variable called command for the system to find the command!
+
+command = port_scan
+
+    
