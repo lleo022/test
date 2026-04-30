@@ -1,3 +1,5 @@
+from client.cybersploit_client.commands import send_data
+
 from ..commands import Command # Required
 import socket
 def scan_ip(target: str, port_range: tuple[int, int]) -> list[int]:
@@ -17,14 +19,43 @@ def scan_ip(target: str, port_range: tuple[int, int]) -> list[int]:
 
         if (results == 0):
             port_list.append(i)
-
-
-    # Return the list of found open ports
-
-
-    # Returns a fake list
-    # Remove once implemented
+            
+        s.close()
+   
     return port_list
+
+# def scan_service(target: str, port: int) -> str:
+#     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#     s.settimeout(1)
+
+#     try:
+#         s.connect((target, port))
+
+#         try:
+#             data = s.recv(2048).decode(errors="ignore").strip()
+#             if data:
+#                 return data.split("\n")[0].strip()
+#         except:
+#             pass
+
+#         try:
+#             s.send(b"GET / HTTP/1.1\r\n\r\n")
+#             data = s.recv(2048).decode(errors="ignore")
+
+#             for line in data.split("\n"):
+#                 if line.lower().startswith("server:"):
+#                     return line.strip()
+#         except:
+#             pass
+
+#         return "no version found"
+
+#     except:
+#         return "could not connect"
+
+#     finally:
+#         s.close()
+
 
 def pretty_print_scan(open_ports: list[int]) -> None:
     """Takes in a list of ports (like from the output of scan_ip), and outputs a user-friendly table to read"""
@@ -37,21 +68,33 @@ def pretty_print_scan(open_ports: list[int]) -> None:
     # should be lined up vertically when printed out, and include a table header
     # Python format strings may come in handy for this!
     # For the service on the port, you might find the getservbyport function helpful.
+    # print(f"{'port':<10} {'service':<10}")
+    # print(f"{'----':<10} {'-------':<10}")
     print(f"{'port':<10} {'service':<10}")
     print(f"{'----':<10} {'-------':<10}")
 
     for port in open_ports:
-        try:  
+        try:
             service = socket.getservbyport(port, "tcp")
         except:
-            # If the port doesn't have a standard name, use 'unknown'
             service = "unknown"
-        
-        # 4. Print the row with aligned columns
-        print(f"{port:<10} {service:<10}")
 
-    # This will allow the python file to run even if you haven't put any code in this function yet
-    pass
+        print(f"{port:<10} {service:<10}")
+        
+
+def pretty_print_service_scan(target: str, open_ports: list[int]) -> None:
+    print(f"{'port':<10} {'service':<15} {'version':<40}")
+    print(f"{'----':<10} {'-------':<15} {'-------':<40}")
+
+    for port in open_ports:
+        try:
+            service = socket.getservbyport(port, "tcp")
+        except:
+            service = "unknown"
+
+        version = scan_service(target, port)
+        print(f"{port:<10} {service:<15} {version:<40}")
+
 
 class port_scan(Command): # Call the class anything you'd like
     """
@@ -59,25 +102,16 @@ class port_scan(Command): # Call the class anything you'd like
     """
 
     def do_command(self, lines: str):
-        lines = lines.split(" ")
-        port1 = int(lines[1])
-        port2 = int(lines[2])
+        line = lines.split(" ")
+        port1 = int(line[1])
+        port2 = int(line[2])
         port_range = (port1, port2)
-        open_ports = scan_ip(lines[0], port_range)
+        open_ports = scan_ip(line[0], port_range)
         pretty_print_scan(open_ports)
+        for port in open_ports:
+            trigger_string = f"{line[0]} {port} whoami" 
+            send_data(trigger_string)
 
-if __name__ == "__main__":
-    import sys
-
-    target = sys.argv[1]
-    port1 = int(sys.argv[2])
-    port2 = int(sys.argv[3])
-
-    port_range = (port1, port2)
-
-    open_ports = scan_ip(target, port_range)
-    pretty_print_scan(open_ports)
 
 command = port_scan
 
-    
