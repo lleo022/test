@@ -107,20 +107,29 @@ def handle_conn(conn, addr):
                     continue
 
                 if command.startswith("run_linux "):
-                    command = command[10:].strip()
-                    if not command:
-                        continue
+                    bash = command[10:].strip()
+                    if not bash:
+                        break
 
-                    print("running linux command: " + command)
-                    result = run_command(command)
+                    print("running linux command: " + bash)
+                    result = run_command(bash)
 
                     response = result.stdout + result.stderr
                     if not response: 
                         response = f"Command executed. Exit code: {result.returncode}"
                     conn.sendall(response.encode("utf-8", errors="replace"))
                 elif command.startswith("run_python "): 
-                    print("python has not been added yet")
-                    # TODO: add python commands 
+                    python_code = command[11:].strip()
+                    if not python_code:
+                        break
+
+                    print("running python command: " + python_code)
+                    result = subprocess.run([sys.executable, "-c", python_code], capture_output=True, text=True)
+
+                    response = result.stdout + result.stderr
+                    if not response: 
+                        response = f"Command executed. Exit code: {result.returncode}"
+                    conn.sendall(response.encode("utf-8", errors="replace"))
 
                 break
             except Exception as e:
