@@ -1,67 +1,60 @@
-from client.cybersploit_client.commands import send_data
-
 from ..commands import Command # Required
+from .send_data import process_lines as send_data
 import socket
+
+
 def scan_ip(target: str, port_range: tuple[int, int]) -> list[int]:
-
     # Create a list to store open ports
-
     port_list = []
-
     # Iterate over the range of ports
         # For each port:
         # - Create a sockhoet
         # - Attempt to connect to the ip and port
-
     for i in range(port_range[0], port_range[1] + 1):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(1)
         results = s.connect_ex((target, i))
 
         if (results == 0):
             port_list.append(i)
             
         s.close()
-   
     return port_list
 
-# def scan_service(target: str, port: int) -> str:
-#     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#     s.settimeout(1)
 
-#     try:
-#         s.connect((target, port))
+def scan_service(target: str, port: int) -> str:
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(1)
 
-#         try:
-#             data = s.recv(2048).decode(errors="ignore").strip()
-#             if data:
-#                 return data.split("\n")[0].strip()
-#         except:
-#             pass
+    try:
+        s.connect((target, port))
+        try:
+            data = s.recv(2048).decode(errors="ignore").strip()
+            if data:
+                return data.split("\n")[0].strip()
+        except:
+            pass
+        try:
+            s.send(b"GET / HTTP/1.1\r\n\r\n")
+            data = s.recv(2048).decode(errors="ignore")
 
-#         try:
-#             s.send(b"GET / HTTP/1.1\r\n\r\n")
-#             data = s.recv(2048).decode(errors="ignore")
-
-#             for line in data.split("\n"):
-#                 if line.lower().startswith("server:"):
-#                     return line.strip()
-#         except:
-#             pass
-
-#         return "no version found"
-
-#     except:
-#         return "could not connect"
-
-#     finally:
-#         s.close()
+            for line in data.split("\n"):
+                if line.lower().startswith("server:"):
+                    return line.strip()
+        except:
+            pass
+        return "no version found"
+    except:
+        return "could not connect"
+    
+    finally:
+        s.close()
 
 
 def pretty_print_scan(open_ports: list[int]) -> None:
     """Takes in a list of ports (like from the output of scan_ip), and outputs a user-friendly table to read"""
     # DO NOT call the scan ip function in here - only use the list of ports provided in the function argument
 
-    
     # Now, let's use python formatting to make a nice little table, kinda like nmap!
     # Up to you for the details, but your table should contain the port that is open,
     # and the name of the service that is running on it. It should look "nice", i.e. columns
@@ -100,7 +93,6 @@ class port_scan(Command): # Call the class anything you'd like
     """
     Scanning to find open ports
     """
-
     def do_command(self, lines: str):
         line = lines.split(" ")
         port1 = int(line[1])

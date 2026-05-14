@@ -106,6 +106,7 @@ def handle_conn(conn, addr):
                 if not command:
                     continue
 
+                # Run bash commands with `echo run_linux [command here]`
                 if command.startswith("run_linux "):
                     bash = command[10:].strip()
                     if not bash:
@@ -118,6 +119,7 @@ def handle_conn(conn, addr):
                     if not response: 
                         response = f"Command executed. Exit code: {result.returncode}"
                     conn.sendall(response.encode("utf-8", errors="replace"))
+                # Run Python code with `echo run_python [code here]`
                 elif command.startswith("run_python "): 
                     python_code = command[11:].strip()
                     if not python_code:
@@ -137,7 +139,6 @@ def handle_conn(conn, addr):
                 conn.sendall(error_msg.encode("utf-8"))
                 break
          
-
 
 def main():
     kill_others()

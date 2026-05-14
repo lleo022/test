@@ -4,14 +4,14 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 def go_phish(lines: str):
-    lines = lines.split(" ")
+    recipient_parts = lines.split(" ")
 
     smtp_server, port = ("e1-mail.acmcyber.com", 32525)
     username, password = ("expert-hacker", "hunter2")
 
     message = MIMEMultipart("alternative")
     message["From"] = "germs-pt2@e1-mail.acmcyber.com"
-    message["To"] = lines[0] if lines[0] else "e1-instructors@e1-mail.acmcyber.com"
+    message["To"] = recipient_parts[0] if recipient_parts[0] else "e1-instructors@e1-mail.acmcyber.com"
     message["Subject"] = "UCLA Giveaway Demo Notification"
 
     html = """\
