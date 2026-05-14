@@ -6,7 +6,9 @@ __all__ = [
     "send_data",
     "brick",
     "port_scan",
-    "phishing"
+    "send_email",
+    "shellshock"
+    "camera_capture"
 ]
 
 
