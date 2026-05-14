@@ -24,38 +24,6 @@ def scan_ip(target: str, port_range: tuple[int, int]) -> list[int]:
    
     return port_list
 
-# def scan_service(target: str, port: int) -> str:
-#     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#     s.settimeout(1)
-
-#     try:
-#         s.connect((target, port))
-
-#         try:
-#             data = s.recv(2048).decode(errors="ignore").strip()
-#             if data:
-#                 return data.split("\n")[0].strip()
-#         except:
-#             pass
-
-#         try:
-#             s.send(b"GET / HTTP/1.1\r\n\r\n")
-#             data = s.recv(2048).decode(errors="ignore")
-
-#             for line in data.split("\n"):
-#                 if line.lower().startswith("server:"):
-#                     return line.strip()
-#         except:
-#             pass
-
-#         return "no version found"
-
-#     except:
-#         return "could not connect"
-
-#     finally:
-#         s.close()
-
 
 def pretty_print_scan(open_ports: list[int]) -> None:
     """Takes in a list of ports (like from the output of scan_ip), and outputs a user-friendly table to read"""
