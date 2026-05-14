@@ -6,7 +6,8 @@ __all__ = [
     "send_data",
     "brick",
     "port_scan",
-    "send_email"
+    "send_email",
+    "shellshock"
 ]
 
 
