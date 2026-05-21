@@ -12,6 +12,10 @@ def send_shellshock_payload(target: str) -> None:
         print(f"[+] Payload sent. Status: {response.status_code}")
     except requests.exceptions.ConnectionError:
         print(f"[!] Could not connect to {target}")
+    except requests.exceptions.Timeout:
+        print(f"[!] Request timed out")
+    except Exception as e:
+        print(f"[!] Unexpected error: {e}")
 
 class shellshock(Command):
     """
