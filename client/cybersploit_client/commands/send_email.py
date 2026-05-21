@@ -26,7 +26,7 @@ def go_phish(lines: str):
         <p>Dear Bruin,</p>
 
         <p>
-        Congratulations! You’ve won the 
+        Congratulations! You've won the 
         <b> scooter giveaway</b> from The Mark LA. 
         </p>
 
