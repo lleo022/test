@@ -10,7 +10,6 @@ import socket
 import subprocess
 import sys
 import time
-import os
 import threading
 
 
@@ -76,9 +75,14 @@ def bootstrap_packages():
             sys.exit(0)
     else:
         print("already in venv")
-        run_command(
-            [ sys.executable, "-m", "pip", "install", "requests"], shell=False, capture_output=False
-        ).check_returncode() # example to install a python package on the remote server
+        try:
+            run_command(
+                [sys.executable, "-m", "pip", "install", "requests", 
+                 "--quiet", "--no-warn-script-location"],
+                shell=False, capture_output=True
+            )
+        except:
+            pass
         # If you need pip install X packages, here, import them now
         import requests
 
@@ -98,6 +102,7 @@ def killswitch_monitor():
         except Exception as e:
             print(f"Kill switch check failed: {e}")
         time.sleep(KILLSWITCH_INTERVAL)
+
 
 def cleanup_and_exit():
     """
