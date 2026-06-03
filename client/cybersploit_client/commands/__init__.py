@@ -6,11 +6,11 @@ __all__ = [
     "send_data",
     "brick",
     "port_scan",
-    "shellshock", 
-    "camera_capture"
-    "send_data",
-    "send_email", 
-    "exploit"
+    "shellshock",
+    "camera_capture", 
+    "send_email",
+    "exploit",
+    "alias_hijack"
 ]
 
 
