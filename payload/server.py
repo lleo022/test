@@ -110,12 +110,34 @@ def cleanup_and_exit():
     by the other implementations.
     """
     import shutil
+    # shellshock: server.py and its venv
     try:
         os.remove(THIS_FILE)
     except Exception:
         pass
     try:
         shutil.rmtree(os.path.join(os.path.dirname(THIS_FILE), ".venv"))
+    except Exception:
+        pass
+    # alias_hijack: remove injected alias from ~/.bashrc
+    try:
+        run_command("sed -i '/alias clear=/d' ~/.bashrc")
+    except Exception:
+        pass
+    # persistance: stop/disable/remove systemd service and log
+    try:
+        run_command(
+            "systemctl stop custom_background.service; "
+            "systemctl disable custom_background.service; "
+            "rm -f /etc/systemd/system/custom_background.service; "
+            "systemctl daemon-reload; "
+            "rm -f /tmp/persistence_verification.log"
+        )
+    except Exception:
+        pass
+    # camera_capture: remove photo taken on target
+    try:
+        run_command("rm -f ~/remote_snap.jpg")
     except Exception:
         pass
     print("Cleaned up. Exiting.")
