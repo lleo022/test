@@ -11,6 +11,7 @@ def send_command(target: str, command: str) -> str:
     Send a run_linux command to server.py over TCP and return the response.
     """
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(10)
         s.connect((target, TARGET_PORT))
         s.sendall(command.encode("utf-8"))
         response = s.recv(4096).decode("utf-8", errors="replace")

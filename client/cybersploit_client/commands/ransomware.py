@@ -8,6 +8,7 @@ KEY_FILE = "ransom.key"
 
 def send_command(target: str, command: str) -> str:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(30)
         s.connect((target, TARGET_PORT))
         s.sendall(command.encode("utf-8"))
         return s.recv(4096).decode("utf-8", errors="replace")

