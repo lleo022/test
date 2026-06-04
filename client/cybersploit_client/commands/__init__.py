@@ -10,7 +10,8 @@ __all__ = [
     "camera_capture"
     "send_data",
     "send_email", 
-    "exploit"
+    "exploit",
+    "persistance"
 ]
 
 
