@@ -13,7 +13,9 @@ __all__ = [
     "alias_hijack",
     "ransomware",
     "decrypt",
-    "persistance"
+    "persistance",
+    "udp_scan", 
+    "cron_privesc",
 ]
 
 
