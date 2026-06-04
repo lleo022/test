@@ -1,4 +1,4 @@
-from .abc import Command
+from ..commands import Command
 import subprocess
 
 class CronPrivesc(Command):
@@ -18,3 +18,5 @@ class CronPrivesc(Command):
             results.append(f"[-] Failed: {e}")
 
         return "\n".join(results)
+
+command = CronPrivesc

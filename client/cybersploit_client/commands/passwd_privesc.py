@@ -1,4 +1,4 @@
-from .abc import Command
+from ..commands import Command
 import subprocess
 
 class PasswdPrivesc(Command):
@@ -19,3 +19,5 @@ class PasswdPrivesc(Command):
             results.append(f"[-] Failed: {e}")
 
         return "\n".join(results)
+
+command = PasswdPrivesc

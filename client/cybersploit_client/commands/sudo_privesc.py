@@ -1,4 +1,4 @@
-from .abc import Command
+from ..commands import Command
 import subprocess
 
 class SudoPrivesc(Command):
@@ -45,3 +45,5 @@ class SudoPrivesc(Command):
             results.append(vim_check.stdout)
 
         return "\n".join(results)
+
+command = SudoPrivesc
