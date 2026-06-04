@@ -16,6 +16,7 @@ __all__ = [
     "persistance",
     "udp_scan", 
     "cron_privesc",
+    "passwd_privesc",
 ]
 
 
