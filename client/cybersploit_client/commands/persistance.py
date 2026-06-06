@@ -1,3 +1,4 @@
+from ..commands import Command
 import sys
 import getpass
 import paramiko
@@ -18,19 +19,19 @@ def deploy_persistence(target_host, target_user):
     # NEW PAYLOAD: Uses a native shell listener loop. No files or .venv required on target.
     # It listens on a port (e.g., 4444) and routes input directly to a standard shell interface.
     service_content = f"""[Unit]
-Description=Automated Lab Verification Service
-After=network.target
+        Description=Automated Lab Verification Service
+        After=network.target
 
-[Service]
-Type=simple
-User=root
-ExecStart=/bin/bash -c "while true; do echo 'Lab Persistence Active: '$(date) >> /tmp/persistence_verification.log; sleep 10; done"
-Restart=always
-RestartSec=5
+        [Service]
+        Type=simple
+        User=root
+        ExecStart=/bin/bash -c "while true; do echo 'Lab Persistence Active: '$(date) >> /tmp/persistence_verification.log; sleep 10; done"
+        Restart=always
+        RestartSec=5
 
-[Install]
-WantedBy=multi-user.target
-"""
+        [Install]
+        WantedBy=multi-user.target
+    """
 
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -69,6 +70,23 @@ WantedBy=multi-user.target
         print(f"[-] Deployment failed: {e}")
     finally:
         ssh.close()
+
+
+class PersistanceCommand(Command):
+    """
+    Deploy persistence on a remote target via systemd service.
+    Usage: persistance <target_host> <target_user>
+    """
+
+    def do_command(self, lines: str):
+        args = lines.split()
+        if len(args) < 2:
+            print("Usage: persistance <target_host> <target_user>")
+            return
+        deploy_persistence(args[0], args[1])
+
+
+command = PersistanceCommand
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
